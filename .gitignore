@@ -1,0 +1,27 @@
+# Database exports and any extracted data
+*.csv
+*.sql
+*.dump
+
+# Built index
+table_index/
+*.faiss
+faiss.index
+*.pkl
+processed_records.json
+
+# Secrets
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

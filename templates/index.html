@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecordBot - Advanced Record Discovery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #2c3e50, #3498db);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .search-section {
+            padding: 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .user .message-content {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .bot .message-content {
+            background: #f1f3f4;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .user .avatar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .bot .avatar {
+            background: #3498db;
+            color: white;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+
+        .stats-bar {
+            padding: 10px 25px;
+            background: #e8f4fd;
+            color: #2c3e50;
+            font-size: 14px;
+            text-align: center;
+            border-top: 1px solid #d0e7f7;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .search-suggestions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .suggestion-chip {
+            background: white;
+            border: 1px solid #3498db;
+            color: #3498db;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-chip:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                border-radius: 0;
+                margin: -20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .search-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-btn {
+                width: 100%;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+
+        /* Scrollbar styling */
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 3px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>RecordBot</h1>
+            <p>Advanced Record Discovery Engine</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Search for records by title, author, genre, or topic..."
+                    autocomplete="off"
+                />
+                <button id="searchBtn" class="search-btn" onclick="performSearch()">
+                    Search
+                </button>
+            </div>
+            
+            <!-- Search Suggestions -->
+            <div class="search-suggestions">
+                <div class="suggestion-chip" onclick="searchExample('children records')">Children's Records</div>
+                <div class="suggestion-chip" onclick="searchExample('science fiction')">Science Fiction</div>
+                <div class="suggestion-chip" onclick="searchExample('history records')">History</div>
+                <div class="suggestion-chip" onclick="searchExample('romance novels')">Romance</div>
+                <div class="suggestion-chip" onclick="searchExample('textrecords')">Textrecords</div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div class="message bot">
+                <div class="avatar">B</div>
+                <div class="message-content">
+                    Welcome to RecordBot! I can help you discover records from our extensive database. 
+                    Try searching for:
+                    <br><br>
+                    <strong>• Author names:</strong> "records by Agatha Christie"
+                    <br><strong>• Genres:</strong> "mystery novels" or "children's records"  
+                    <br><strong>• Topics:</strong> "machine learning" or "cooking"
+                    <br><strong>• Specific titles:</strong> "Harry Potter"
+                    <br><br>
+                    What kind of records are you looking for today?
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="statsBar">
+            <span id="systemStatus">Initializing search engine...</span>
+        </div>
+    </div>
+
+    <script>
+        let isSearching = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystemHealth();
+            
+            // Add enter key functionality
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !isSearching) {
+                    performSearch();
+                }
+            });
+        });
+
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    document.getElementById('systemStatus').innerHTML = 
+                        `Ready • ${data.total_records_indexed.toLocaleString()} records indexed • ${data.device.toUpperCase()} powered`;
+                } else {
+                    document.getElementById('systemStatus').innerHTML = 'System Error - Please run train.py first';
+                    document.getElementById('systemStatus').style.color = '#c62828';
+                }
+            } catch (error) {
+                document.getElementById('systemStatus').innerHTML = 'Connection Error';
+                document.getElementById('systemStatus').style.color = '#c62828';
+            }
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                showError('Please enter a search query');
+                return;
+            }
+
+            if (isSearching) return;
+
+            // Add user message
+            addMessage('user', query);
+            
+            // Clear input and show loading
+            document.getElementById('searchInput').value = '';
+            const loadingMsg = addMessage('bot', '<div class="loading">Searching our record database<span class="loading-dots"></span></div>');
+            
+            // Disable search
+            setSearchState(false);
+            
+            // Perform search
+            searchRecords(query, loadingMsg);
+        }
+
+        async function searchRecords(query, loadingMessage) {
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        query: query,
+                        max_results: 20 
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Remove loading message
+                loadingMessage.remove();
+                
+                if (data.success) {
+                    // Add search results
+                    addMessage('bot', formatSearchResponse(data));
+                    
+                    // Update stats
+                    document.getElementById('systemStatus').innerHTML = 
+                        `Last search: ${data.total_results} results in ${data.search_time_seconds}s`;
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+                
+            } catch (error) {
+                loadingMessage.remove();
+                showError('Connection error. Please check your internet connection.');
+                console.error('Search error:', error);
+            } finally {
+                setSearchState(true);
+            }
+        }
+
+        function formatSearchResponse(data) {
+            if (!data.results || data.results.length === 0) {
+                return `No records found for "${data.query}". Try different keywords or check spelling.`;
+            }
+
+            let html = `<div style="margin-bottom: 15px;">
+                <strong>Found ${data.total_results} record(s) for "${data.query}":</strong>
+            </div>`;
+
+            data.results.forEach((record, index) => {
+                html += `<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">`;
+                
+                // Title
+                html += `<div style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 8px;">
+                    ${index + 1}. ${record.title || 'Unknown Title'}
+                </div>`;
+                
+                // Author
+                if (record.author && record.author.trim()) {
+                    html += `<div style="color: #555; margin-bottom: 5px;">
+                        <strong>Author:</strong> ${record.author}
+                    </div>`;
+                }
+                
+                // Publication details
+                let pubDetails = [];
+                if (record.publisher && record.publisher.trim()) {
+                    pubDetails.push(`Publisher: ${record.publisher}`);
+                }
+                if (record.year && record.year !== '0' && record.year.trim()) {
+                    pubDetails.push(`Year: ${record.year}`);
+                }
+                if (record.format && record.format.trim()) {
+                    pubDetails.push(`Format: ${record.format}`);
+                }
+                
+                if (pubDetails.length > 0) {
+                    html += `<div style="color: #666; margin-bottom: 5px; font-size: 14px;">
+                        ${pubDetails.join(' • ')}
+                    </div>`;
+                }
+                
+                // Subject
+                if (record.subject && record.subject.trim()) {
+                    html += `<div style="color: #666; margin-bottom: 8px; font-size: 14px;">
+                        <strong>Subject:</strong> ${record.subject}
+                    </div>`;
+                }
+                
+                // Price and identifier
+                let additionalInfo = [];
+                if (record.price && record.price !== '0') {
+                    try {
+                        const price = parseFloat(record.price);
+                        if (price > 0) {
+                            additionalInfo.push(`<span style="color: #27ae60; font-weight: bold;">₹${price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>`);
+                        }
+                    } catch (e) {}
+                }
+                
+                if (record.identifier && record.identifier.trim()) {
+                    additionalInfo.push(`<span style="color: #7f8c8d;">identifier: ${record.identifier}</span>`);
+                }
+                
+                if (additionalInfo.length > 0) {
+                    html += `<div style="margin-top: 8px; font-size: 14px;">
+                        ${additionalInfo.join(' • ')}
+                    </div>`;
+                }
+                
+                html += `</div>`;
+            });
+
+            return html;
+        }
+
+        function addMessage(sender, content) {
+            const chatArea = document.getElementById('chatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = sender === 'user' ? 'You' : 'B';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            chatArea.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        function showError(message) {
+            const errorHtml = `<div class="error-message">
+                <strong>Error:</strong> ${message}
+            </div>`;
+            addMessage('bot', errorHtml);
+        }
+
+        function setSearchState(enabled) {
+            isSearching = !enabled;
+            const searchBtn = document.getElementById('searchBtn');
+            const searchInput = document.getElementById('searchInput');
+            
+            searchBtn.disabled = !enabled;
+            searchInput.disabled = !enabled;
+            searchBtn.textContent = enabled ? 'Search' : 'Searching...';
+        }
+
+        function searchExample(exampleQuery) {
+            document.getElementById('searchInput').value = exampleQuery;
+            performSearch();
+        }
+
+        // Auto-focus search input
+        window.onload = function() {
+            document.getElementById('searchInput').focus();
+        };
+    </script>
+</body>
+</html>
