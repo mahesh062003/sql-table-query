@@ -71,3 +71,12 @@ Neither the index nor any database export is included in this repository.
 
 Python · MySQL · SQLAlchemy · PyMySQL · sentence-transformers · FAISS ·
 rank_bm25 · NLTK · Flask · PyTorch
+
+---
+
+## Use
+
+© 2026 Mahesh Veeraiah R. All rights reserved.
+
+Published for review and assessment. Not licensed for reuse, redistribution or
+modification — please get in touch about any other use.
